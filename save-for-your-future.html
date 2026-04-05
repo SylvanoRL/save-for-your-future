@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Save For Your Future</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --cream: #FDF6EC;
+    --amber: #E8A135;
+    --amber-light: #FFF0C8;
+    --green: #2D5A27;
+    --green-light: #EAF2E8;
+    --terra: #C4704F;
+    --terra-light: #FCEEE8;
+    --brown: #3D2B1F;
+    --brown-mid: #7A5C4E;
+    --white: #FFFFFF;
+    --shadow: 0 4px 24px rgba(61,43,31,0.10);
+    --shadow-sm: 0 2px 8px rgba(61,43,31,0.08);
+    --radius: 20px;
+    --radius-sm: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--cream);
+    color: var(--brown);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BG TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(232,161,53,0.13) 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 80%, rgba(196,112,79,0.10) 0%, transparent 55%),
+      radial-gradient(ellipse at 60% 30%, rgba(45,90,39,0.07) 0%, transparent 45%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .screen { display: none; position: relative; z-index: 1; }
+  .screen.active { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ── LANDING ── */
+  #screen-landing {
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+  }
+  .landing-logo {
+    width: 72px; height: 72px;
+    background: var(--green);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 32px;
+    box-shadow: 0 6px 20px rgba(45,90,39,0.25);
+    animation: popIn 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .landing-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 6vw, 3rem);
+    color: var(--brown);
+    line-height: 1.15;
+    margin-bottom: 12px;
+    animation: slideUp 0.6s 0.1s both;
+  }
+  .landing-title span { color: var(--green); font-style: italic; }
+  .landing-sub {
+    font-size: 1.05rem;
+    color: var(--brown-mid);
+    max-width: 400px;
+    line-height: 1.6;
+    margin: 0 auto 36px;
+    animation: slideUp 0.6s 0.2s both;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .landing-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 36px 32px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: var(--shadow);
+    animation: slideUp 0.6s 0.3s both;
+  }
+  .landing-card h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+  }
+  .landing-card p {
+    color: var(--brown-mid);
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+  }
+
+  /* INPUTS */
+  .input-wrap { position: relative; margin-bottom: 16px; }
+  .input-wrap label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--brown-mid);
+    margin-bottom: 6px;
+  }
+  input[type="text"], input[type="email"], input[type="tel"], input[type="number"], select, textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #E8DDD5;
+    border-radius: var(--radius-sm);
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    color: var(--brown);
+    background: var(--cream);
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--amber);
+    background: var(--white);
+  }
+
+  /* BUTTONS */
+  .btn {
+    width: 100%;
+    padding: 15px 24px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn:active { transform: translateY(0); }
+  .btn-primary {
+    background: var(--green);
+    color: var(--white);
+    box-shadow: 0 4px 16px rgba(45,90,39,0.30);
+  }
+  .btn-primary:hover { box-shadow: 0 6px 20px rgba(45,90,39,0.40); }
+  .btn-amber {
+    background: var(--amber);
+    color: var(--white);
+    box-shadow: 0 4px 16px rgba(232,161,53,0.35);
+  }
+  .btn-outline {
+    background: transparent;
+    color: var(--green);
+    border: 2px solid var(--green);
+  }
+  .btn-sm { padding: 10px 20px; font-size: 0.9rem; width: auto; }
+
+  /* PILLS / TAGS */
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .pill-green { background: var(--green-light); color: var(--green); }
+  .pill-amber { background: var(--amber-light); color: #9A6400; }
+  .pill-terra { background: var(--terra-light); color: var(--terra); }
+
+  /* STAT CARDS */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    padding: 18px 14px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-card .stat-val {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    color: var(--brown);
+    display: block;
+  }
+  .stat-card .stat-lbl {
+    font-size: 0.75rem;
+    color: var(--brown-mid);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+  }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 24px;
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .progress-header h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.15rem;
+  }
+  .progress-track {
+    background: #EDE6DF;
+    border-radius: 100px;
+    height: 18px;
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, var(--green), #5A9A50);
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 80%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+  }
+  @keyframes shimmer {
+    to { left: 200%; }
+  }
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: var(--brown-mid);
+    font-weight: 600;
+  }
+
+  /* DASHBOARD LAYOUT */
+  #screen-dashboard {
+    padding: 0;
+  }
+  .dash-header {
+    background: var(--green);
+    padding: 28px 24px 48px;
+    color: var(--white);
+    position: relative;
+    overflow: hidden;
+  }
+  .dash-header::after {
+    content: '';
+    position: absolute;
+    bottom: -20px; left: 0; right: 0;
+    height: 40px;
+    background: var(--cream);
+    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  }
+  .dash-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .dash-greeting {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    color: var(--white);
+  }
+  .dash-sub { font-size: 0.9rem; opacity: 0.8; margin-top: 2px; }
+  .logout-btn {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .logout-btn:hover { background: rgba(255,255,255,0.25); }
+
+  .dash-body {
+    padding: 12px 20px 40px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* SECTION HEADERS */
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.2rem;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* LOG SPENDING FORM */
+  .log-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 24px;
+  }
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .cat-btn {
+    padding: 10px 6px;
+    border: 2px solid #E8DDD5;
+    border-radius: var(--radius-sm);
+    background: var(--cream);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .cat-btn .cat-icon { font-size: 1.3rem; }
+  .cat-btn.selected {
+    border-color: var(--amber);
+    background: var(--amber-light);
+    color: #7A5000;
+  }
+  .cat-btn:hover { border-color: var(--amber); }
+
+  /* WEEK HISTORY */
+  .week-item {
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: slideUp 0.4s both;
+  }
+  .week-item-left h4 { font-size: 0.95rem; font-weight: 700; }
+  .week-item-left p { font-size: 0.82rem; color: var(--brown-mid); margin-top: 2px; }
+  .week-score {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+  }
+  .score-a { color: var(--green); }
+  .score-b { color: var(--amber); }
+  .score-c { color: var(--terra); }
+
+  /* CELEBRATION */
+  #screen-celebrate {
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    background: var(--green);
+    color: var(--white);
+  }
+  .celebrate-icon { font-size: 80px; margin-bottom: 20px; animation: bounce 1s infinite; }
+  @keyframes bounce {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  .celebrate-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 6vw, 2.8rem);
+    margin-bottom: 12px;
+  }
+  .celebrate-sub { font-size: 1.05rem; opacity: 0.9; max-width: 340px; margin: 0 auto 32px; line-height: 1.6; }
+  .celebrate-card {
+    background: rgba(255,255,255,0.12);
+    border: 2px solid rgba(255,255,255,0.25);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    max-width: 360px;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  .celebrate-card p { font-size: 0.95rem; opacity: 0.9; line-height: 1.6; }
+
+  /* ERROR / SUCCESS MESSAGES */
+  .msg {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .msg.show { display: block; }
+  .msg-error { background: #FDECEA; color: #C0392B; }
+  .msg-success { background: var(--green-light); color: var(--green); }
+
+  /* REGISTER SCREEN */
+  #screen-register {
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  .register-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 36px 32px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: var(--shadow);
+  }
+  .register-card h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    margin-bottom: 6px;
+  }
+  .register-card p { color: var(--brown-mid); font-size: 0.9rem; margin-bottom: 24px; }
+  .username-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--green-light);
+    color: var(--green);
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+
+  /* LOADING */
+  .loading {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px;
+    color: var(--brown-mid);
+    font-size: 0.9rem;
+    padding: 20px;
+  }
+  .spinner {
+    width: 20px; height: 20px;
+    border: 3px solid #E8DDD5;
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* TAB NAV */
+  .tab-nav {
+    display: flex;
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    padding: 4px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--brown-mid);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab-btn.active {
+    background: var(--green);
+    color: var(--white);
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .divider {
+    border: none;
+    border-top: 2px dashed #E8DDD5;
+    margin: 20px 0;
+  }
+
+  /* CONFIG BANNER */
+  .config-banner {
+    background: #FFF3CD;
+    border: 2px solid #E8A135;
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    font-size: 0.85rem;
+    color: #7A5000;
+    font-weight: 600;
+    display: none;
+  }
+  .config-banner.show { display: block; }
+  .config-banner code {
+    background: rgba(0,0,0,0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.82rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ SCREEN: LANDING ═══════════════ -->
+<div id="screen-landing" class="screen active">
+  <div class="config-banner" id="configBanner">
+    ⚠️ Demo mode — replace <code>SUPABASE_URL</code> and <code>SUPABASE_KEY</code> at the top of the script with your real credentials to enable data saving.
+  </div>
+  <div class="landing-logo">🌱</div>
+  <h1 class="landing-title">Save For Your<br/><span>Future</span></h1>
+  <p class="landing-sub">A weekly challenge for parents who want to build real financial momentum — one small saving at a time.</p>
+
+  <div class="landing-card">
+    <h3>Welcome! Enter your username</h3>
+    <p>New here? You'll create your profile next. Returning? We'll pull up your progress.</p>
+    <div class="msg msg-error" id="landingError"></div>
+    <div class="input-wrap">
+      <label>Username</label>
+      <input type="text" id="usernameInput" placeholder="e.g. savingmom2024" maxlength="30"/>
+    </div>
+    <button class="btn btn-primary" onclick="handleUsernameSubmit()">Continue →</button>
+  </div>
+
+  <p style="margin-top: 24px; font-size: 0.8rem; color: var(--brown-mid); max-width: 320px; line-height: 1.5;">
+    Your data is private and tied to your username. You'll be contacted when you reach your savings milestone. 🎯
+  </p>
+</div>
+
+<!-- ═══════════════ SCREEN: REGISTER ═══════════════ -->
+<div id="screen-register" class="screen">
+  <div class="register-card">
+    <div class="username-badge">✨ <span id="regUsername"></span></div>
+    <h2>Tell us about yourself</h2>
+    <p>Just a few details so we can personalize your experience and reach out when you hit your goal.</p>
+    <div class="msg msg-error" id="registerError"></div>
+    <div class="input-wrap">
+      <label>First Name</label>
+      <input type="text" id="regFirstName" placeholder="Your first name"/>
+    </div>
+    <div class="input-wrap">
+      <label>Email Address</label>
+      <input type="email" id="regEmail" placeholder="your@email.com"/>
+    </div>
+    <div class="input-wrap">
+      <label>Phone Number</label>
+      <input type="tel" id="regPhone" placeholder="(407) 555-0000"/>
+    </div>
+    <button class="btn btn-primary" onclick="handleRegister()" style="margin-top: 8px;">Start Saving 🌱</button>
+    <button class="btn btn-outline" onclick="showScreen('landing')" style="margin-top: 10px;">← Back</button>
+  </div>
+</div>
+
+<!-- ═══════════════ SCREEN: DASHBOARD ═══════════════ -->
+<div id="screen-dashboard" class="screen">
+
+  <div class="dash-header">
+    <div class="dash-header-top">
+      <div>
+        <div class="dash-greeting">Hey, <span id="dashName">Friend</span>! 👋</div>
+        <div class="dash-sub">Keep building your future, one week at a time.</div>
+      </div>
+      <button class="logout-btn" onclick="handleLogout()">Log out</button>
+    </div>
+  </div>
+
+  <div class="dash-body">
+
+    <!-- PROGRESS -->
+    <div class="progress-wrap">
+      <div class="progress-header">
+        <h3>🎯 Journey to $500</h3>
+        <span class="pill pill-green" id="progressPill">$0 saved</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+      </div>
+      <div class="progress-labels">
+        <span>$0</span>
+        <span id="progressPct">0% there</span>
+        <span>$500</span>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-val" id="statTotalSaved">$0</span>
+        <span class="stat-lbl">Total Saved</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val" id="statWeeks">0</span>
+        <span class="stat-lbl">Weeks In</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val" id="statScore">—</span>
+        <span class="stat-lbl">Last Score</span>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('log')">📝 Log Spending</button>
+      <button class="tab-btn" onclick="switchTab('history')">📊 My History</button>
+    </div>
+
+    <!-- TAB: LOG SPENDING -->
+    <div class="tab-content active" id="tab-log">
+      <div class="log-card">
+        <div class="section-title">💸 What did you spend on?</div>
+        <div class="category-grid">
+          <button class="cat-btn" onclick="selectCat(this,'🛒 Groceries')"><span class="cat-icon">🛒</span>Groceries</button>
+          <button class="cat-btn" onclick="selectCat(this,'🍔 Dining Out')"><span class="cat-icon">🍔</span>Dining Out</button>
+          <button class="cat-btn" onclick="selectCat(this,'🎬 Entertainment')"><span class="cat-icon">🎬</span>Entertainment</button>
+          <button class="cat-btn" onclick="selectCat(this,'🛍️ Shopping')"><span class="cat-icon">🛍️</span>Shopping</button>
+          <button class="cat-btn" onclick="selectCat(this,'⛽ Gas / Transport')"><span class="cat-icon">⛽</span>Gas/Transport</button>
+          <button class="cat-btn" onclick="selectCat(this,'📦 Other')"><span class="cat-icon">📦</span>Other</button>
+        </div>
+
+        <div class="input-wrap">
+          <label>Amount Spent ($)</label>
+          <input type="number" id="amountSpent" placeholder="0.00" min="0" step="0.01"/>
+        </div>
+        <div class="input-wrap">
+          <label>Amount You Saved Instead ($)</label>
+          <input type="number" id="amountSaved" placeholder="0.00" min="0" step="0.01"/>
+        </div>
+        <div class="input-wrap">
+          <label>Note (optional)</label>
+          <input type="text" id="logNote" placeholder="e.g. Made coffee at home instead!"/>
+        </div>
+
+        <div class="msg msg-error" id="logError"></div>
+        <div class="msg msg-success" id="logSuccess"></div>
+
+        <button class="btn btn-amber" onclick="handleLogEntry()">Save This Entry ✓</button>
+      </div>
+
+      <!-- THIS WEEK SUMMARY -->
+      <div class="log-card" id="thisWeekCard" style="display:none">
+        <div class="section-title">📅 This Week So Far</div>
+        <div id="thisWeekEntries"></div>
+        <hr class="divider"/>
+        <div style="display:flex; justify-content:space-between; font-weight:700; font-size:0.95rem;">
+          <span>Week Savings Total</span>
+          <span id="weekTotal" style="color:var(--green)">$0.00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: HISTORY -->
+    <div class="tab-content" id="tab-history">
+      <div id="historyLoading" class="loading"><div class="spinner"></div> Loading your history...</div>
+      <div id="historyList"></div>
+      <div id="historyEmpty" style="display:none; text-align:center; padding:40px 20px; color:var(--brown-mid);">
+        <div style="font-size:2rem; margin-bottom:12px;">📭</div>
+        <p style="font-weight:700;">No entries yet!</p>
+        <p style="font-size:0.85rem; margin-top:4px;">Start logging your spending to see your history here.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ SCREEN: CELEBRATE ═══════════════ -->
+<div id="screen-celebrate" class="screen">
+  <div class="celebrate-icon">🎉</div>
+  <div class="celebrate-title">You Did It!</div>
+  <p class="celebrate-sub">You've saved <strong>$500</strong> — that's a life-changing habit you've built. You're ready for the next step.</p>
+  <div class="celebrate-card">
+    <p>A financial consultant will be reaching out to you soon. Get ready — your future is about to get a whole lot brighter. 🌟</p>
+  </div>
+  <button class="btn" style="background:white; color:var(--green); max-width:320px; width:100%; font-weight:800;" onclick="showScreen('dashboard')">← Back to My Dashboard</button>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+//  ⚙️  CONFIGURATION — REPLACE THESE VALUES
+// ════════════════════════════════════════════
+const SUPABASE_URL = 'https://dhohcpteeewsxuidyxft.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_2uzyRpx-mqDMMzpVX3cS9w_Icey2nkD';
+const SAVINGS_TARGET = 500;
+// ════════════════════════════════════════════
+
+let supabase = null;
+let currentUser = null;
+let selectedCategory = '';
+let demoMode = false;
+let demoData = { users: [], entries: [] };
+
+// Init
+window.addEventListener('DOMContentLoaded', () => {
+  if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
+    demoMode = true;
+    document.getElementById('configBanner').classList.add('show');
+  } else {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+
+  // Check session
+  const saved = localStorage.getItem('sfyf_user');
+  if (saved) {
+    currentUser = JSON.parse(saved);
+    loadDashboard();
+    showScreen('dashboard');
+  }
+});
+
+// ── SCREEN ROUTING ──
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.target.classList.add('active');
+  if (tab === 'history') loadHistory();
+}
+
+// ── LANDING ──
+async function handleUsernameSubmit() {
+  const username = document.getElementById('usernameInput').value.trim().toLowerCase().replace(/\s+/g, '');
+  const errEl = document.getElementById('landingError');
+  errEl.classList.remove('show');
+
+  if (!username || username.length < 3) {
+    showError(errEl, 'Please enter a username (at least 3 characters).');
+    return;
+  }
+
+  let existingUser = null;
+
+  if (demoMode) {
+    existingUser = demoData.users.find(u => u.username === username) || null;
+  } else {
+    const { data, error } = await supabase.from('users').select('*').eq('username', username).single();
+    if (error && error.code !== 'PGRST116') { showError(errEl, 'Connection error. Please try again.'); return; }
+    existingUser = data;
+  }
+
+  if (existingUser) {
+    currentUser = existingUser;
+    localStorage.setItem('sfyf_user', JSON.stringify(currentUser));
+    loadDashboard();
+    showScreen('dashboard');
+  } else {
+    document.getElementById('regUsername').textContent = username;
+    document.getElementById('screen-register').dataset.username = username;
+    showScreen('register');
+  }
+}
+
+// ── REGISTER ──
+async function handleRegister() {
+  const username = document.getElementById('screen-register').dataset.username;
+  const firstName = document.getElementById('regFirstName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const errEl = document.getElementById('registerError');
+  errEl.classList.remove('show');
+
+  if (!firstName) { showError(errEl, 'Please enter your first name.'); return; }
+  if (!email || !email.includes('@')) { showError(errEl, 'Please enter a valid email address.'); return; }
+
+  const newUser = { username, first_name: firstName, email, phone, created_at: new Date().toISOString() };
+
+  if (demoMode) {
+    demoData.users.push(newUser);
+    currentUser = newUser;
+  } else {
+    const { data, error } = await supabase.from('users').insert([{ username, email, phone }]).select().single();
+    if (error) { showError(errEl, 'Could not create account. Username may be taken.'); return; }
+    currentUser = { ...data, first_name: firstName };
+  }
+
+  localStorage.setItem('sfyf_user', JSON.stringify(currentUser));
+  loadDashboard();
+  showScreen('dashboard');
+}
+
+// ── LOG ENTRY ──
+function selectCat(btn, cat) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedCategory = cat;
+}
+
+async function handleLogEntry() {
+  const spent = parseFloat(document.getElementById('amountSpent').value) || 0;
+  const saved = parseFloat(document.getElementById('amountSaved').value) || 0;
+  const note = document.getElementById('logNote').value.trim();
+  const errEl = document.getElementById('logError');
+  const sucEl = document.getElementById('logSuccess');
+  errEl.classList.remove('show'); sucEl.classList.remove('show');
+
+  if (!selectedCategory) { showError(errEl, 'Please select a spending category.'); return; }
+  if (spent <= 0 && saved <= 0) { showError(errEl, 'Please enter an amount spent or saved.'); return; }
+
+  const weekStart = getWeekStart();
+  const entry = {
+    username: currentUser.username,
+    week_start: weekStart,
+    category: selectedCategory,
+    amount_spent: spent,
+    amount_saved: saved,
+    notes: note,
+    created_at: new Date().toISOString()
+  };
+
+  if (demoMode) {
+    demoData.entries.push(entry);
+  } else {
+    const { error } = await supabase.from('weekly_entries').insert([{
+      username: currentUser.username,
+      week_start: weekStart,
+      category: selectedCategory,
+      amount_spent: spent,
+      amount_saved: saved,
+      notes: note
+    }]);
+    if (error) { showError(errEl, 'Could not save entry. Please try again.'); return; }
+  }
+
+  // Reset form
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+  selectedCategory = '';
+  document.getElementById('amountSpent').value = '';
+  document.getElementById('amountSaved').value = '';
+  document.getElementById('logNote').value = '';
+
+  showSuccess(sucEl, `✓ Saved $${saved.toFixed(2)} logged!`);
+  await loadDashboard();
+
+  // Check milestone
+  const totalSaved = await getTotalSaved();
+  if (totalSaved >= SAVINGS_TARGET) {
+    setTimeout(() => showScreen('celebrate'), 1200);
+  }
+}
+
+// ── DASHBOARD LOADER ──
+async function loadDashboard() {
+  const name = currentUser.first_name || currentUser.username;
+  document.getElementById('dashName').textContent = name;
+
+  const entries = await getAllEntries();
+  const totalSaved = entries.reduce((s, e) => s + (e.amount_saved || 0), 0);
+  const weeks = [...new Set(entries.map(e => e.week_start))].length;
+
+  // Progress
+  const pct = Math.min((totalSaved / SAVINGS_TARGET) * 100, 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressPill').textContent = '$' + totalSaved.toFixed(2) + ' saved';
+  document.getElementById('progressPct').textContent = Math.round(pct) + '% there';
+  document.getElementById('statTotalSaved').textContent = '$' + totalSaved.toFixed(2);
+  document.getElementById('statWeeks').textContent = weeks;
+
+  // Last week score
+  const score = calcScore(entries, getWeekStart(1));
+  document.getElementById('statScore').textContent = score || '—';
+  const scoreEl = document.getElementById('statScore');
+  scoreEl.className = 'stat-val ' + getScoreClass(score);
+
+  // This week entries
+  const thisWeek = entries.filter(e => e.week_start === getWeekStart());
+  if (thisWeek.length > 0) {
+    document.getElementById('thisWeekCard').style.display = 'block';
+    const weekSaved = thisWeek.reduce((s, e) => s + (e.amount_saved || 0), 0);
+    document.getElementById('weekTotal').textContent = '$' + weekSaved.toFixed(2);
+    document.getElementById('thisWeekEntries').innerHTML = thisWeek.map(e => `
+      <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #EDE6DF; font-size:0.88rem;">
+        <span style="color:var(--brown-mid)">${e.category}</span>
+        <span style="color:var(--green); font-weight:700;">+$${(e.amount_saved||0).toFixed(2)}</span>
+      </div>
+    `).join('');
+  }
+}
+
+async function loadHistory() {
+  document.getElementById('historyLoading').style.display = 'flex';
+  document.getElementById('historyList').innerHTML = '';
+  document.getElementById('historyEmpty').style.display = 'none';
+
+  const entries = await getAllEntries();
+  document.getElementById('historyLoading').style.display = 'none';
+
+  if (!entries.length) { document.getElementById('historyEmpty').style.display = 'block'; return; }
+
+  // Group by week
+  const byWeek = {};
+  entries.forEach(e => {
+    if (!byWeek[e.week_start]) byWeek[e.week_start] = [];
+    byWeek[e.week_start].push(e);
+  });
+
+  const weeks = Object.keys(byWeek).sort().reverse();
+  const html = weeks.map(week => {
+    const weekEntries = byWeek[week];
+    const totalSaved = weekEntries.reduce((s,e) => s + (e.amount_saved||0), 0);
+    const totalSpent = weekEntries.reduce((s,e) => s + (e.amount_spent||0), 0);
+    const score = calcScore(entries, week);
+    const scoreClass = getScoreClass(score);
+    const label = week === getWeekStart() ? '📅 This Week' : 'Week of ' + formatDate(week);
+    return `
+      <div class="week-item">
+        <div class="week-item-left">
+          <h4>${label}</h4>
+          <p>Spent $${totalSpent.toFixed(2)} · Saved $${totalSaved.toFixed(2)} · ${weekEntries.length} entries</p>
+        </div>
+        <div class="week-score ${scoreClass}">${score}</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('historyList').innerHTML = html;
+}
+
+// ── HELPERS ──
+async function getAllEntries() {
+  if (demoMode) return demoData.entries.filter(e => e.username === currentUser.username);
+  const { data } = await supabase.from('weekly_entries').select('*').eq('username', currentUser.username).order('created_at', { ascending: false });
+  return data || [];
+}
+
+async function getTotalSaved() {
+  const entries = await getAllEntries();
+  return entries.reduce((s, e) => s + (e.amount_saved || 0), 0);
+}
+
+function calcScore(entries, week) {
+  const weekEntries = entries.filter(e => e.week_start === week);
+  if (!weekEntries.length) return null;
+  const saved = weekEntries.reduce((s,e) => s + (e.amount_saved||0), 0);
+  const spent = weekEntries.reduce((s,e) => s + (e.amount_spent||0), 0);
+  if (spent === 0 && saved > 0) return 'A+';
+  const ratio = saved / (saved + spent);
+  if (ratio >= 0.35) return 'A';
+  if (ratio >= 0.20) return 'B';
+  if (ratio >= 0.10) return 'C';
+  return 'D';
+}
+
+function getScoreClass(score) {
+  if (!score) return '';
+  if (score.startsWith('A')) return 'score-a';
+  if (score === 'B') return 'score-b';
+  return 'score-c';
+}
+
+function getWeekStart(weeksAgo = 0) {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1) - (weeksAgo * 7);
+  d.setDate(diff);
+  return d.toISOString().split('T')[0];
+}
+
+function formatDate(str) {
+  return new Date(str + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function showError(el, msg) { el.textContent = msg; el.classList.add('show'); }
+function showSuccess(el, msg) { el.textContent = msg; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000); }
+
+function handleLogout() {
+  localStorage.removeItem('sfyf_user');
+  currentUser = null;
+  document.getElementById('usernameInput').value = '';
+  showScreen('landing');
+}
+</script>
+</body>
+</html>
