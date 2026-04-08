@@ -98,6 +98,7 @@
   .tab-btn.active-save { background: var(--amber); color: var(--white); }
   .tab-btn.active-spend { background: var(--terra); color: var(--white); }
   .tab-btn.active-history { background: var(--green); color: var(--white); }
+  .tab-btn.active-feedback { background: var(--brown-mid); color: var(--white); }
   .tab-pane { display: none; }
   .tab-pane.active { display: block; }
 
@@ -255,6 +256,7 @@
       <button class="tab-btn active-save" data-tab="save">✅ Log<br/>Savings</button>
       <button class="tab-btn" data-tab="spend">💸 Log<br/>Spending</button>
       <button class="tab-btn" data-tab="history">📊 My<br/>History</button>
+      <button class="tab-btn" data-tab="feedback">💬 Feedback</button>
     </div>
 
     <!-- TAB: LOG SAVINGS (first/active) -->
@@ -329,6 +331,21 @@
       </div>
     </div>
 
+    <!-- TAB: FEEDBACK -->
+    <div class="tab-pane" id="pane-feedback">
+      <div class="log-card">
+        <div class="section-title">💬 Submit a Question or Feedback</div>
+        <p style="font-size:0.88rem;color:var(--brown-mid);margin-bottom:18px;line-height:1.6;">Have a question or something on your mind? We review all submissions daily.</p>
+        <div class="input-wrap">
+          <label>Your Message</label>
+          <textarea id="feedbackMessage" placeholder="Type your question or feedback here..." style="width:100%;padding:14px 16px;border:2px solid #E8DDD5;border-radius:12px;font-family:Nunito,sans-serif;font-size:1rem;color:var(--brown);background:var(--cream);outline:none;resize:vertical;min-height:120px;"></textarea>
+        </div>
+        <div class="msg msg-error" id="feedbackError"></div>
+        <div class="msg msg-success" id="feedbackSuccess"></div>
+        <button class="btn btn-primary" id="submitFeedbackBtn">Send Feedback →</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -376,6 +393,7 @@ var pendingUsername = '';
   document.getElementById('saveSpendBtn').addEventListener('click', onLogSpend);
   document.getElementById('saveSaveBtn').addEventListener('click', onLogSaving);
   document.getElementById('backToDashBtn').addEventListener('click', function() { go('dashboard'); });
+  document.getElementById('submitFeedbackBtn').addEventListener('click', onSubmitFeedback);
   document.getElementById('usernameInput').addEventListener('keydown', function(e) { if(e.key==='Enter') onContinue(); });
 
   // Overview tabs
@@ -392,12 +410,13 @@ var pendingUsername = '';
   // Log tabs
   document.querySelectorAll('.tab-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
-      document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active-save','active-spend','active-history'); });
+      document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active-save','active-spend','active-history','active-feedback'); });
       document.querySelectorAll('.tab-pane').forEach(function(p) { p.classList.remove('active'); });
       var tab = btn.dataset.tab;
       if (tab === 'save') btn.classList.add('active-save');
       else if (tab === 'spend') btn.classList.add('active-spend');
-      else btn.classList.add('active-history');
+      else if (tab === 'history') btn.classList.add('active-history');
+      else btn.classList.add('active-feedback');
       document.getElementById('pane-' + tab).classList.add('active');
       if (tab === 'history') renderHistory();
     });
@@ -567,6 +586,21 @@ function renderHistory() {
 
 function onLogout() { localStorage.removeItem('sfyf_u'); user=null; document.getElementById('usernameInput').value=''; go('landing'); }
 
+function onSubmitFeedback() {
+  var message = document.getElementById('feedbackMessage').value.trim();
+  var err = document.getElementById('feedbackError');
+  var suc = document.getElementById('feedbackSuccess');
+  err.classList.remove('show'); suc.classList.remove('show');
+  if (!message || message.length < 5) { showMsg(err, 'Please enter a message before submitting.', 'error'); return; }
+  var btn = document.getElementById('submitFeedbackBtn');
+  btn.textContent = 'Sending...'; btn.disabled = true;
+  saveFeedback(user.username, 'Question or Feedback', message).then(function() {
+    btn.textContent = 'Send Feedback →'; btn.disabled = false;
+    document.getElementById('feedbackMessage').value = '';
+    showMsg(suc, '✓ Sent! We will review your message shortly.', 'success');
+  }).catch(function() { btn.textContent = 'Send Feedback →'; btn.disabled = false; showMsg(err, 'Could not send. Please try again.', 'error'); });
+}
+
 // DATA LAYER
 function getUser(username) {
   if (!db) { var u=JSON.parse(localStorage.getItem('sfyf_users')||'[]').find(function(x){return x.username===username;})||null; return Promise.resolve(u); }
@@ -585,6 +619,11 @@ function saveEntry(username,dateStr,category,spent,saved,note,entryType) {
 function getEntries(username) {
   if (!db) { var arr=JSON.parse(localStorage.getItem('sfyf_entries')||'[]').filter(function(e){return e.username===username;}); return Promise.resolve(arr); }
   return db.from('weekly_entries').select('*').eq('username',username).order('created_at',{ascending:false}).then(function(r){return r.data||[];});
+}
+
+function saveFeedback(username, category, message) {
+  if (!db) { return Promise.resolve(); }
+  return db.from("feedback").insert([{username:username,category:category,message:message}]).then(function(r){ if(r.error) throw r.error; });
 }
 
 // UTILS
