@@ -502,20 +502,27 @@ function onLogin() {
   err.classList.remove('show');
   if (username.length < 3) { showMsg(err, 'Please enter your username.', 'error'); return; }
   if (!phone || phone.length < 7) { showMsg(err, 'Please enter your phone number.', 'error'); return; }
+
+  // Debug: check if db is connected
+  if (!db) { showMsg(err, 'Database not connected. Please refresh the page and try again.', 'error'); return; }
+
   var btn = document.getElementById('loginBtn');
   btn.textContent = 'Logging in...'; btn.disabled = true;
-  getUser(username).then(function(found) {
+
+  db.from('users').select('*').eq('username', username).then(function(result) {
     btn.textContent = 'Log In →'; btn.disabled = false;
-    if (!found) { showMsg(err, 'Username not found. Please sign up instead.', 'error'); return; }
-    // Normalize phones for comparison — strip non-digits
+    if (result.error) { showMsg(err, 'Database error: ' + result.error.message, 'error'); return; }
+    if (!result.data || result.data.length === 0) { showMsg(err, 'Username not found. Please check spelling or sign up.', 'error'); return; }
+    var found = result.data[0];
     var storedPhone = (found.phone || '').replace(/\D/g, '');
     var enteredPhone = phone.replace(/\D/g, '');
+    if (storedPhone === '' ) { showMsg(err, 'No phone on file for this account. Please contact support.', 'error'); return; }
     if (storedPhone !== enteredPhone) { showMsg(err, 'Phone number does not match. Please try again.', 'error'); return; }
     user = found;
     localStorage.setItem('sfyf_u', JSON.stringify(user));
     refreshDash();
     go('dashboard');
-  }).catch(function() { btn.textContent = 'Log In →'; btn.disabled = false; showMsg(err, 'Connection error. Please try again.', 'error'); });
+  }).catch(function(e) { btn.textContent = 'Log In →'; btn.disabled = false; showMsg(err, 'Connection error: ' + (e.message||'unknown'), 'error'); });
 }
 
 function onSignup() {
