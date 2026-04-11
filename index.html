@@ -403,10 +403,14 @@ var pendingUsername = '';
 
 (function() {
   try {
-    if (typeof supabase !== 'undefined' && supabase.createClient) {
-      db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    var _sb = window.supabase || window.Supabase;
+    if (_sb && _sb.createClient) {
+      db = _sb.createClient(SUPABASE_URL, SUPABASE_KEY);
+      console.log('Supabase connected OK');
+    } else {
+      console.error('Supabase library not found on window');
     }
-  } catch(e) { console.warn('Supabase unavailable.'); }
+  } catch(e) { console.error('Supabase init error:', e); }
 
   try {
     var s = localStorage.getItem('sfyf_u');
