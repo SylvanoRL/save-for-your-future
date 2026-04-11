@@ -676,7 +676,7 @@ function onSubmitFeedback() {
 
 // DATA LAYER
 function getUser(username) {
-  if (!db) { var u=JSON.parse(localStorage.getItem('sfyf_users')||'[]').find(function(x){return x.username===username;})||null; return Promise.resolve(u); }
+  if (!db) { return Promise.reject(new Error('No database connection')); }
   return db.from('users').select('*').eq('username',username).single().then(function(r){ if(r.error&&r.error.code==='PGRST116') return null; if(r.error) throw r.error; return r.data; });
 }
 function createUser(username,email,phone) {
