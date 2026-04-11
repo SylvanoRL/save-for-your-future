@@ -150,15 +150,43 @@
   <div class="landing-logo">🌱</div>
   <h1 class="landing-title">Save For Your<br/><span>Future</span></h1>
   <p class="landing-sub">A weekly challenge for parents who want to build real financial momentum — one small saving at a time.</p>
+
   <div class="card" style="animation: slideUp 0.6s 0.3s both;">
-    <h3>Welcome! Enter your username</h3>
-    <p>New here? You'll create your profile next. Returning? We'll pull up your progress.</p>
-    <div class="msg msg-error" id="landingError"></div>
-    <div class="input-wrap">
-      <label>Username</label>
-      <input type="text" id="usernameInput" placeholder="e.g. savingmom2024" maxlength="30"/>
+
+    <!-- TOGGLE -->
+    <div style="display:flex;background:var(--cream);border-radius:var(--radius-sm);padding:4px;margin-bottom:24px;gap:4px;">
+      <button id="toggleLogin" style="flex:1;padding:10px;border:none;border-radius:9px;font-family:Nunito,sans-serif;font-size:0.9rem;font-weight:800;cursor:pointer;background:var(--green);color:white;transition:all 0.2s;">Log In</button>
+      <button id="toggleSignup" style="flex:1;padding:10px;border:none;border-radius:9px;font-family:Nunito,sans-serif;font-size:0.9rem;font-weight:800;cursor:pointer;background:transparent;color:var(--brown-mid);transition:all 0.2s;">Sign Up</button>
     </div>
-    <button class="btn btn-primary" id="continueBtn">Continue →</button>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+      <h3 style="font-family:'DM Serif Display',serif;font-size:1.3rem;margin-bottom:6px;">Welcome back!</h3>
+      <p style="color:var(--brown-mid);font-size:0.88rem;margin-bottom:20px;">Enter your username and phone number to continue.</p>
+      <div class="msg msg-error" id="loginError"></div>
+      <div class="input-wrap">
+        <label>Username</label>
+        <input type="text" id="loginUsername" placeholder="Your username" maxlength="30"/>
+      </div>
+      <div class="input-wrap">
+        <label>Phone Number</label>
+        <input type="tel" id="loginPhone" placeholder="(407) 555-0000"/>
+      </div>
+      <button class="btn btn-primary" id="loginBtn">Log In →</button>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="signupForm" style="display:none;">
+      <h3 style="font-family:'DM Serif Display',serif;font-size:1.3rem;margin-bottom:6px;">Create your account</h3>
+      <p style="color:var(--brown-mid);font-size:0.88rem;margin-bottom:20px;">Choose a username to get started.</p>
+      <div class="msg msg-error" id="signupError"></div>
+      <div class="input-wrap">
+        <label>Username</label>
+        <input type="text" id="signupUsername" placeholder="e.g. savingmom2024" maxlength="30"/>
+      </div>
+      <button class="btn btn-primary" id="signupBtn">Continue →</button>
+    </div>
+
   </div>
   <p style="margin-top:20px;font-size:0.8rem;color:var(--brown-mid);max-width:320px;line-height:1.5;text-align:center;">Your data is private and tied to your username. 🎯</p>
 </div>
@@ -386,7 +414,27 @@ var pendingUsername = '';
   } catch(e) { localStorage.removeItem('sfyf_u'); }
 
   // Main buttons
-  document.getElementById('continueBtn').addEventListener('click', onContinue);
+  // Login/Signup toggle
+  document.getElementById('toggleLogin').addEventListener('click', function() {
+    document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('signupForm').style.display = 'none';
+    document.getElementById('toggleLogin').style.background = 'var(--green)';
+    document.getElementById('toggleLogin').style.color = 'white';
+    document.getElementById('toggleSignup').style.background = 'transparent';
+    document.getElementById('toggleSignup').style.color = 'var(--brown-mid)';
+  });
+  document.getElementById('toggleSignup').addEventListener('click', function() {
+    document.getElementById('signupForm').style.display = 'block';
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('toggleSignup').style.background = 'var(--green)';
+    document.getElementById('toggleSignup').style.color = 'white';
+    document.getElementById('toggleLogin').style.background = 'transparent';
+    document.getElementById('toggleLogin').style.color = 'var(--brown-mid)';
+  });
+  document.getElementById('loginBtn').addEventListener('click', onLogin);
+  document.getElementById('signupBtn').addEventListener('click', onSignup);
+  document.getElementById('loginPhone').addEventListener('keydown', function(e) { if(e.key==='Enter') onLogin(); });
+  document.getElementById('signupUsername').addEventListener('keydown', function(e) { if(e.key==='Enter') onSignup(); });
   document.getElementById('registerBtn').addEventListener('click', onRegister);
   document.getElementById('backBtn').addEventListener('click', function() { go('landing'); });
   document.getElementById('logoutBtn').addEventListener('click', onLogout);
@@ -394,7 +442,7 @@ var pendingUsername = '';
   document.getElementById('saveSaveBtn').addEventListener('click', onLogSaving);
   document.getElementById('backToDashBtn').addEventListener('click', function() { go('dashboard'); });
   document.getElementById('submitFeedbackBtn').addEventListener('click', onSubmitFeedback);
-  document.getElementById('usernameInput').addEventListener('keydown', function(e) { if(e.key==='Enter') onContinue(); });
+  
 
   // Overview tabs
   document.querySelectorAll('.ov-tab').forEach(function(btn) {
@@ -447,18 +495,43 @@ function go(screen) {
   window.scrollTo(0, 0);
 }
 
-function onContinue() {
-  var username = document.getElementById('usernameInput').value.trim().toLowerCase().replace(/\s+/g,'');
-  var err = document.getElementById('landingError');
+function onLogin() {
+  var username = document.getElementById('loginUsername').value.trim().toLowerCase().replace(/\s+/g,'');
+  var phone = document.getElementById('loginPhone').value.trim();
+  var err = document.getElementById('loginError');
   err.classList.remove('show');
-  if (username.length < 3) { showMsg(err,'Username must be at least 3 characters.','error'); return; }
-  var btn = document.getElementById('continueBtn');
+  if (username.length < 3) { showMsg(err, 'Please enter your username.', 'error'); return; }
+  if (!phone || phone.length < 7) { showMsg(err, 'Please enter your phone number.', 'error'); return; }
+  var btn = document.getElementById('loginBtn');
+  btn.textContent = 'Logging in...'; btn.disabled = true;
+  getUser(username).then(function(found) {
+    btn.textContent = 'Log In →'; btn.disabled = false;
+    if (!found) { showMsg(err, 'Username not found. Please sign up instead.', 'error'); return; }
+    // Normalize phones for comparison — strip non-digits
+    var storedPhone = (found.phone || '').replace(/\D/g, '');
+    var enteredPhone = phone.replace(/\D/g, '');
+    if (storedPhone !== enteredPhone) { showMsg(err, 'Phone number does not match. Please try again.', 'error'); return; }
+    user = found;
+    localStorage.setItem('sfyf_u', JSON.stringify(user));
+    refreshDash();
+    go('dashboard');
+  }).catch(function() { btn.textContent = 'Log In →'; btn.disabled = false; showMsg(err, 'Connection error. Please try again.', 'error'); });
+}
+
+function onSignup() {
+  var username = document.getElementById('signupUsername').value.trim().toLowerCase().replace(/\s+/g,'');
+  var err = document.getElementById('signupError');
+  err.classList.remove('show');
+  if (username.length < 3) { showMsg(err, 'Username must be at least 3 characters.', 'error'); return; }
+  var btn = document.getElementById('signupBtn');
   btn.textContent = 'Checking...'; btn.disabled = true;
   getUser(username).then(function(found) {
     btn.textContent = 'Continue →'; btn.disabled = false;
-    if (found) { user = found; localStorage.setItem('sfyf_u', JSON.stringify(user)); refreshDash(); go('dashboard'); }
-    else { pendingUsername = username; document.getElementById('regUsernameLabel').textContent = username; go('register'); }
-  }).catch(function() { btn.textContent = 'Continue →'; btn.disabled = false; showMsg(err,'Connection error. Please try again.','error'); });
+    if (found) { showMsg(err, 'Username already taken. Please choose another.', 'error'); return; }
+    pendingUsername = username;
+    document.getElementById('regUsernameLabel').textContent = username;
+    go('register');
+  }).catch(function() { btn.textContent = 'Continue →'; btn.disabled = false; showMsg(err, 'Connection error. Please try again.', 'error'); });
 }
 
 function onRegister() {
@@ -584,7 +657,7 @@ function renderHistory() {
   });
 }
 
-function onLogout() { localStorage.removeItem('sfyf_u'); user=null; document.getElementById('usernameInput').value=''; go('landing'); }
+function onLogout() { localStorage.removeItem('sfyf_u'); user=null; document.getElementById('loginUsername').value=''; document.getElementById('loginPhone').value=''; go('landing'); }
 
 function onSubmitFeedback() {
   var message = document.getElementById('feedbackMessage').value.trim();
