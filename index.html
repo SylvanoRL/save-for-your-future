@@ -99,6 +99,15 @@
   .tab-btn.active-spend { background: var(--terra); color: var(--white); }
   .tab-btn.active-history { background: var(--green); color: var(--white); }
   .tab-btn.active-feedback { background: var(--brown-mid); color: var(--white); }
+  .tab-btn.active-resources { background: #1A3A8F; color: var(--white); }
+  .resource-card { background: var(--white); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); margin-bottom: 14px; display: flex; gap: 14px; align-items: flex-start; text-decoration: none; color: inherit; transition: transform 0.15s, box-shadow 0.15s; border: 2px solid transparent; }
+  .resource-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: #1A3A8F; }
+  .res-icon { font-size: 1.8rem; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .res-icon.blue { background: #E8EEF9; }
+  .res-icon.green { background: var(--green-light); }
+  .res-title { font-family: "DM Serif Display", serif; font-size: 1rem; color: var(--brown); margin-bottom: 4px; }
+  .res-desc { font-size: 0.81rem; color: var(--brown-mid); line-height: 1.5; }
+  .res-link { font-size: 0.79rem; font-weight: 700; color: #1A3A8F; margin-top: 5px; display: block; }
   .tab-pane { display: none; }
   .tab-pane.active { display: block; }
 
@@ -285,6 +294,7 @@
       <button class="tab-btn" data-tab="spend">💸 Log<br/>Spending</button>
       <button class="tab-btn" data-tab="history">📊 My<br/>History</button>
       <button class="tab-btn" data-tab="feedback">💬 Feedback</button>
+      <button class="tab-btn" data-tab="resources">📚 Resources</button>
     </div>
 
     <!-- TAB: LOG SAVINGS (first/active) -->
@@ -356,6 +366,32 @@
         <div style="font-size:2rem;margin-bottom:10px;">📭</div>
         <p style="font-weight:700;">No entries yet!</p>
         <p style="font-size:0.85rem;margin-top:4px;">Start logging your spending and savings.</p>
+      </div>
+    </div>
+
+    <!-- TAB: RESOURCES -->
+    <div class="tab-pane" id="pane-resources">
+      <div class="log-card">
+        <div class="section-title">📚 Financial Resources</div>
+        <p style="font-size:0.85rem;color:var(--brown-mid);margin-bottom:20px;line-height:1.5;">Tools and resources to help you and your family build a stronger financial future.</p>
+
+        <a class="resource-card" href="https://lifehappens.org/life-insurance-needs-calculator/" target="_blank" rel="noopener">
+          <div class="res-icon blue">🛡️</div>
+          <div>
+            <div class="res-title">Life Insurance Needs Calculator</div>
+            <div class="res-desc">Find out exactly how much life insurance coverage your family needs to stay protected. Takes less than 2 minutes.</div>
+            <span class="res-link">lifehappens.org → Open Calculator ↗</span>
+          </div>
+        </a>
+
+        <div class="resource-card" style="opacity:0.45;cursor:default;">
+          <div class="res-icon green">📖</div>
+          <div>
+            <div class="res-title">More Resources Coming Soon</div>
+            <div class="res-desc">Additional financial tools and guides will be added here shortly.</div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -462,12 +498,13 @@ var pendingUsername = '';
   // Log tabs
   document.querySelectorAll('.tab-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
-      document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active-save','active-spend','active-history','active-feedback'); });
+      document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active-save','active-spend','active-history','active-feedback','active-resources'); });
       document.querySelectorAll('.tab-pane').forEach(function(p) { p.classList.remove('active'); });
       var tab = btn.dataset.tab;
       if (tab === 'save') btn.classList.add('active-save');
       else if (tab === 'spend') btn.classList.add('active-spend');
       else if (tab === 'history') btn.classList.add('active-history');
+      else if (tab === 'resources') btn.classList.add('active-resources');
       else btn.classList.add('active-feedback');
       document.getElementById('pane-' + tab).classList.add('active');
       if (tab === 'history') renderHistory();
